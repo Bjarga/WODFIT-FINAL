@@ -2,8 +2,8 @@ services:
   - type: web
     name: backend
     env: node
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    buildCommand: npm install
+    startCommand: npm run start-backend
     envVars:
       - key: MONGO_URI
         value: your_mongo_uri
@@ -15,5 +15,5 @@ services:
   - type: web
     name: frontend
     env: node
-    buildCommand: cd client && npm install && npm run build
-    startCommand: cd client && npm start
+    buildCommand: npm install && npm run build-frontend
+    startCommand: npm run start-frontend
