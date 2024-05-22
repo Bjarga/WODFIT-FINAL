@@ -5,13 +5,13 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const session = require("express-session");
+const multer = require("multer");
+const passport = require("./config/passport");
 const User = require("./models/User");
 const Photo = require("./models/Photo");
 const Workout = require("./models/Workout");
 const authenticateToken = require("./middleware/authMiddleware");
-const multer = require("multer");
-const session = require("express-session");
-const passport = require("./config/passport");
 const passportRoutes = require("./routes/passportRoutes");
 const authRoutes = require("./routes/authRoutes");
 const photoRoutes = require("./routes/photoRoutes");
@@ -22,10 +22,17 @@ const scoreRoutes = require("./routes/scoreRoutes");
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 
-// Initialize session middleware with secret from environment variables
+app.use(
+  cors({
+    origin: ["https://your-frontend-service-url", "http://localhost:3000"], // Update with your frontend URL
+    credentials: true,
+  })
+);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -35,23 +42,13 @@ app.use(
 );
 
 mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.error("Error connecting to MongoDB:", err.message);
-  });
+  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Error connecting to MongoDB:", err.message));
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Set up routes
 app.use("/", passportRoutes);
 app.use("/auth", authRoutes);
 app.use("/photos", photoRoutes);
@@ -86,7 +83,6 @@ app.post("/register", async (req, res) => {
       groupName: role === "coach" ? groupName : null,
     });
     await user.save();
-
     res.status(201).send("User registered successfully.");
   } catch (error) {
     console.error("Registration error:", error.message);
@@ -99,16 +95,10 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user) return res.status(401).send("Invalid email or password.");
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch)
       return res.status(401).send("Invalid email or password.");
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password); // Compare hashed password
-
-    if (!passwordMatch) {
-      return res.status(401).send("Invalid email or password.");
-    }
-
     const token = jwt.sign(
       {
         userId: user._id,
@@ -117,9 +107,7 @@ app.post("/login", async (req, res) => {
         groupName: user.groupName,
       },
       process.env.SECRET,
-      {
-        expiresIn: "1h",
-      }
+      { expiresIn: "1h" }
     );
     res.json({
       token,
@@ -138,7 +126,6 @@ app.post("/login", async (req, res) => {
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Upload a photo
 app.post(
   "/upload",
   authenticateToken,
@@ -160,7 +147,6 @@ app.post(
   }
 );
 
-// Get all photos
 app.get("/photos", authenticateToken, async (req, res) => {
   try {
     const photos = await Photo.find();
@@ -170,7 +156,6 @@ app.get("/photos", authenticateToken, async (req, res) => {
   }
 });
 
-// Delete a photo
 app.delete("/photos/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -181,20 +166,16 @@ app.delete("/photos/:id", authenticateToken, async (req, res) => {
   }
 });
 
-// Get user data to populate on profile
 app.get("/user/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// Update user profile
 app.put("/user/:id", upload.single("profilePicture"), async (req, res) => {
   try {
     const userId = req.params.id;
