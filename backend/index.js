@@ -27,7 +27,7 @@ const MONGO_URI = process.env.MONGO_URI;
 
 app.use(
   cors({
-    origin: ["https://your-frontend-service-url", "http://localhost:3000"], // Update with your frontend URL
+    origin: ["https://wodfit-final.onrender.com", "http://localhost:3000"], // Update with your frontend URL
     credentials: true,
   })
 );
