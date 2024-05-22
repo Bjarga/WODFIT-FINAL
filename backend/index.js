@@ -2,17 +2,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const session = require("express-session");
-const multer = require("multer");
 const passport = require("./config/passport");
-const User = require("./models/User");
-const Photo = require("./models/Photo");
-const Workout = require("./models/Workout");
-const authenticateToken = require("./middleware/authMiddleware");
-const passportRoutes = require("./routes/passportRoutes");
 const authRoutes = require("./routes/authRoutes");
 const photoRoutes = require("./routes/photoRoutes");
 const profileRoutes = require("./routes/profileRoutes");
@@ -27,7 +19,7 @@ const MONGO_URI = process.env.MONGO_URI;
 
 app.use(
   cors({
-    origin: ["https://wodfit-final.onrender.com", "http://localhost:3000"], // Update with your frontend URL
+    origin: ["https://wodfit-final.onrender.com", "http://localhost:3000"],
     credentials: true,
   })
 );
@@ -49,155 +41,11 @@ mongoose
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use("/", passportRoutes);
 app.use("/auth", authRoutes);
 app.use("/photos", photoRoutes);
 app.use("/profile", profileRoutes);
 app.use(workoutRoutes);
 app.use(scoreRoutes);
-
-// User Registration
-app.post("/register", async (req, res) => {
-  const {
-    email,
-    password,
-    name,
-    birthDate,
-    contactDetails,
-    gender,
-    age,
-    role,
-    groupName,
-  } = req.body;
-  try {
-    const user = new User({
-      email,
-      password,
-      name,
-      birthDate,
-      contactDetails,
-      gender,
-      age,
-      role,
-      profilePicture: "",
-      groupName: role === "coach" ? groupName : null,
-    });
-    await user.save();
-    res.status(201).send("User registered successfully.");
-  } catch (error) {
-    console.error("Registration error:", error.message);
-    res.status(400).send(error.message);
-  }
-});
-
-// User Login
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).send("Invalid email or password.");
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch)
-      return res.status(401).send("Invalid email or password.");
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role,
-        name: user.name,
-        groupName: user.groupName,
-      },
-      process.env.SECRET,
-      { expiresIn: "1h" }
-    );
-    res.json({
-      token,
-      userId: user._id,
-      role: user.role,
-      name: user.name,
-      groupName: user.groupName,
-    });
-  } catch (error) {
-    console.error("Login error:", error.message);
-    res.status(500).send(error.message);
-  }
-});
-
-// Set up multer for file upload
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-app.post(
-  "/upload",
-  authenticateToken,
-  upload.single("photo"),
-  async (req, res) => {
-    try {
-      const { caption } = req.body;
-      const photo = new Photo({
-        url: `data:${req.file.mimetype};base64,${req.file.buffer.toString(
-          "base64"
-        )}`,
-        caption,
-      });
-      await photo.save();
-      res.status(201).json(photo);
-    } catch (error) {
-      res.status(500).send(error.message);
-    }
-  }
-);
-
-app.get("/photos", authenticateToken, async (req, res) => {
-  try {
-    const photos = await Photo.find();
-    res.status(200).json(photos);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-});
-
-app.delete("/photos/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    await Photo.findByIdAndDelete(id);
-    res.status(200).send("Photo deleted");
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-});
-
-app.get("/user/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.put("/user/:id", upload.single("profilePicture"), async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const updates = {
-      name: req.body.name,
-      birthDate: req.body.birthDate,
-      contactDetails: req.body.contactDetails,
-      gender: req.body.gender,
-    };
-    if (req.file) {
-      updates.profilePicture = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString("base64")}`;
-    }
-    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
-      new: true,
-    });
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {

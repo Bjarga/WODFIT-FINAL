@@ -3,25 +3,18 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 
 const registerUser = async (req, res) => {
-  const {
-    email,
-    password,
-    name,
-    birthDate,
-    contactDetails,
-    role, // User selects role: "coach" or "user"
-    groupName, // Optional field to associate with a coach's group
-  } = req.body;
+  const { email, password, name, birthDate, contactDetails, role, groupName } =
+    req.body;
   try {
     const user = new User({
       email,
-      password, // Plain text password, will be hashed by the pre-save hook
+      password,
       name,
       birthDate,
       contactDetails,
       role,
       profilePicture: "",
-      groupName: role === "coach" ? groupName : groupName || null, // Set groupName if role is coach or user joining a group
+      groupName: role === "coach" ? groupName : groupName || null,
     });
     await user.save();
 
