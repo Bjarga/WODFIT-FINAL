@@ -10,6 +10,7 @@ const photoRoutes = require("./routes/photoRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const workoutRoutes = require("./routes/workoutRoutes");
 const scoreRoutes = require("./routes/scoreRoutes");
+const WebSocket = require("ws");
 
 dotenv.config();
 
@@ -46,6 +47,27 @@ app.use("/photos", photoRoutes);
 app.use("/profile", profileRoutes);
 app.use(workoutRoutes);
 app.use(scoreRoutes);
+
+// WebSocket server setup
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+const wss = new WebSocket.Server({ noServer: true });
+
+wss.on("connection", (ws) => {
+  ws.on("message", (message) => {
+    console.log("received: %s", message);
+  });
+
+  ws.send("something");
+});
+
+server.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
