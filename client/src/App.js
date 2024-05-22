@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -29,6 +29,32 @@ function App() {
   const [username, setUsername] = useState(
     localStorage.getItem("username") || ""
   );
+
+  useEffect(() => {
+    const socket = new WebSocket("wss://wodfit-final.onrender.com/ws");
+
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+      console.log("WebSocket message received:", event.data);
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    return () => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  }, []);
 
   const setToken = (token, role, name) => {
     localStorage.setItem("token", token);
