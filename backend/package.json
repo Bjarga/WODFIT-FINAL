@@ -1,33 +1,41 @@
 {
-  "name": "backend",
+  "name": "fullstack-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "jest"
+    "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "start-backend": "cd backend && node index.js",
+    "start-frontend": "cd client && npm start",
+    "build-frontend": "cd client && npm run build",
+    "test": "concurrently \"npm run test-backend\" \"npm run test-frontend\"",
+    "test-backend": "cd backend && jest",
+    "test-frontend": "cd client && react-scripts test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.2",
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-session": "^1.18.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.4",
-    "multer": "^1.4.5-lts.1",
-    "passport": "^0.7.0",
-    "passport-facebook": "^3.0.0",
-    "passport-google-oauth20": "^2.0.0"
+    "dotenv": "^8.2.0",
+    "mongoose": "^5.10.9",
+    "bcrypt": "^5.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.2",
+    "express-session": "^1.17.1",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4",
+    "concurrently": "^6.2.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "supertest": "^7.0.0"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "jest": "^26.6.3",
+    "supertest": "^6.0.1"
   }
 }
