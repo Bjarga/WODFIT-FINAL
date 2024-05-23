@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-        "start": "node index.js",
-    "test": "jest"
+      "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "start-backend": "cd backend && node index.js",
+    "start-frontend": "cd client && npm start",
+    "build-frontend": "cd client && npm run build",
+    "test": "concurrently \"npm run test-backend\" \"npm run test-frontend\"",
+    "test-backend": "cd backend && jest",
+    "test-frontend": "cd client && react-scripts test"
   },
   "dependencies": {
     "express": "^4.17.1",
