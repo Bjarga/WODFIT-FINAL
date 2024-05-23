@@ -19,14 +19,11 @@ function CoachDashboard() {
   // State to manage leaderboard refresh
   const [refreshLeaderboard, setRefreshLeaderboard] = useState(false);
 
-  // API URL from environment variable
-  const apiUrl = process.env.REACT_APP_API_URL;
-
   // useEffect to fetch workouts from the API when the component mounts
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/workouts`);
+        const response = await axios.get("http://localhost:5000/api/workouts");
         setWorkouts(response.data);
       } catch (error) {
         console.error("Error fetching workouts:", error);
@@ -34,7 +31,7 @@ function CoachDashboard() {
     };
 
     fetchWorkouts();
-  }, [apiUrl]);
+  }, []);
 
   // Handler for creating a new workout
   const handleWorkoutCreated = (newWorkout) => {
@@ -45,7 +42,7 @@ function CoachDashboard() {
   // Handler for deleting a workout
   const handleDeleteWorkout = async (id) => {
     try {
-      await axios.delete(`${apiUrl}/workouts/${id}`);
+      await axios.delete(`http://localhost:5000/api/workouts/${id}`);
       setWorkouts((prevWorkouts) =>
         prevWorkouts.filter((workout) => workout._id !== id)
       );
@@ -59,7 +56,7 @@ function CoachDashboard() {
   const handleUpdateWorkout = async (updatedWorkout) => {
     try {
       const response = await axios.put(
-        `${apiUrl}/workouts/${updatedWorkout._id}`,
+        `http://localhost:5000/api/workouts/${updatedWorkout._id}`,
         updatedWorkout
       );
       setWorkouts((prevWorkouts) =>
