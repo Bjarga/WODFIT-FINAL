@@ -19,14 +19,11 @@ const UserWorkoutList = ({ token, onScoreSubmitted }) => {
   // State to store the list of completed workouts
   const [completedWorkouts, setCompletedWorkouts] = useState([]);
 
-  // API URL from environment variable
-  const apiUrl = process.env.REACT_APP_API_URL;
-
   // useEffect to fetch workouts and completed workouts from the API when the component mounts
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/workouts`, {
+        const response = await axios.get("http://localhost:5000/api/workouts", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setWorkouts(response.data);
@@ -38,9 +35,12 @@ const UserWorkoutList = ({ token, onScoreSubmitted }) => {
     const fetchCompletedWorkouts = async () => {
       try {
         const userId = localStorage.getItem("userId");
-        const response = await axios.get(`${apiUrl}/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          `http://localhost:5000/user/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setCompletedWorkouts(
           response.data.completedWorkouts.map((workout) => workout._id)
         );
@@ -51,24 +51,18 @@ const UserWorkoutList = ({ token, onScoreSubmitted }) => {
 
     fetchWorkouts();
     fetchCompletedWorkouts();
-  }, [token, apiUrl]);
+  }, [token]);
 
   // Handler to submit the score for a workout
   const handleScoreSubmit = async () => {
     try {
       const userId = localStorage.getItem("userId");
-      const response = await axios.post(
-        `${apiUrl}/scores`,
-        {
-          userId,
-          workoutTitle: selectedWorkout.title,
-          rounds,
-          time,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.post("http://localhost:5000/api/scores", {
+        userId,
+        workoutTitle: selectedWorkout.title,
+        rounds,
+        time,
+      });
       console.log("Score submitted:", response.data);
       alert("Score submitted successfully!");
       setRounds("");
