@@ -127,7 +127,7 @@ function App() {
                     />
                   </>
                 )}
-                <Route path="/workout" element={<Workout token={token} />} />
+                <Route path="/workouts" element={<Workout token={token} />} />
                 <Route
                   path="/leaderboard"
                   element={<Leaderboard token={token} />}
