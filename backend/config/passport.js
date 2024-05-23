@@ -8,7 +8,6 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-  // Retrieve user from database using the id
   User.findById(id, (err, user) => {
     done(err, user);
   });
@@ -20,13 +19,23 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
+      callbackURL: wodfit - final.vercel.app / login, // Ensure this matches your env variable
     },
-    (accessToken, refreshToken, profile, done) => {
-      // Handle user login or sign up with Google profile information
-      User.findOrCreate({ googleId: profile.id }, (err, user) => {
-        return done(err, user);
-      });
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await User.findOne({ googleId: profile.id });
+        if (!user) {
+          user = new User({
+            googleId: profile.id,
+            name: profile.displayName,
+            email: profile.emails[0].value,
+          });
+          await user.save();
+        }
+        return done(null, user);
+      } catch (err) {
+        return done(err, false);
+      }
     }
   )
 );
@@ -40,10 +49,21 @@ passport.use(
       callbackURL: "/auth/facebook/callback",
       profileFields: ["id", "emails", "name"],
     },
-    (accessToken, refreshToken, profile, done) => {
-      User.findOrCreate({ facebookId: profile.id }, (err, user) => {
-        return done(err, user);
-      });
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await User.findOne({ facebookId: profile.id });
+        if (!user) {
+          user = new User({
+            facebookId: profile.id,
+            name: `${profile.name.givenName} ${profile.name.familyName}`,
+            email: profile.emails[0].value,
+          });
+          await user.save();
+        }
+        return done(null, user);
+      } catch (err) {
+        return done(err, false);
+      }
     }
   )
 );
