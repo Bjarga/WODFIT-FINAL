@@ -69,10 +69,10 @@ server.on("upgrade", (request, socket, head) => {
   });
 });
 
-if (process.env.NODE_ENV !== "test") {
+
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
-}
+
 
 module.exports = app;
